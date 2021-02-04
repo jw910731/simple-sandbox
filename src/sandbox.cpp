@@ -16,10 +16,7 @@ Sandbox::Sandbox(std::string filePath):
    memoryLimit(std::nullopt),
    in(std::nullopt),
    out(std::nullopt),
-   err(std::nullopt)
-{
-    stack = new Byte[STACK_SIZE];
-}
+   err(std::nullopt){}
 
 void Sandbox::setStdin(std::string val) {
     *in = std::move(val);

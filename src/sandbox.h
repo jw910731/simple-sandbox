@@ -21,7 +21,6 @@ public:
     void setStdout(std::string val);
     void setStderr(std::string val);
 private:
-    Byte *stack; //
     std::string filePath;
     std::optional<int> timeLimit, memoryLimit;
     std::optional<std::string> in, out, err;
