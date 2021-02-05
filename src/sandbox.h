@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <string>
 #include <optional>
+#include <vector>
 
 class Sandbox{
 public:
@@ -20,10 +21,13 @@ public:
     void setStdin(std::string val);
     void setStdout(std::string val);
     void setStderr(std::string val);
+    void run(const std::vector<std::string> &args);
 private:
     std::string filePath;
     std::optional<int> timeLimit, memoryLimit;
     std::optional<std::string> in, out, err;
+    void child(const std::vector<std::string> &args);
+    void parent(pid_t);
 };
 
 #endif //SIMPLE_SANDBOX_ROOT_SANDBOX_H
