@@ -14,11 +14,14 @@ void setup_argparse(ArgumentParser &program){
     program.add_argument("args")
         .remaining();
     program.add_argument("-t", "--time")
-        .help("Constraint Time Limit in millisecond.")
-        .action([](const string &val){ return stoi(val); });
+        .help("Constraint Time Limit (in millisecond)")
+        .action([](const string &val){ return stoul(val); });
     program.add_argument("-m", "--memory")
-        .help("Constraint Memory Limit in byte")
-        .action([](const string &val){ return stoi(val); });
+        .help("Constraint Memory Limit (in Byte)")
+        .action([](const string &val){ return stoul(val); });
+    program.add_argument("-f", "--fsize")
+        .help("Constraint Created / Write File Size (in Byte)")
+        .action([](const string &val){ return stoul(val); });
     program.add_argument("--in")
         .help("Redirect stdin Stream from Designated File");
     program.add_argument("--out")
@@ -62,9 +65,10 @@ int main(int argc, const char **argv){
             {"--out", &Sandbox::setStdout},
             {"--err", &Sandbox::setStderr}
     };
-    map<string, void (Sandbox::*)(int)> intOpt = {
+    map<string, void (Sandbox::*)(unsigned long)> intOpt = {
             {"--time", &Sandbox::setTime},
-            {"--memory", &Sandbox::setMemory}
+            {"--memory", &Sandbox::setMemory},
+            {"--fsize", &Sandbox::setFileSize}
     };
     for(auto [k, v] : stringOpt){
         if(auto val = program.present(k)){
@@ -72,7 +76,7 @@ int main(int argc, const char **argv){
         }
     }
     for(auto [k, v] : intOpt){
-        if(auto val = program.present<int>(k)){
+        if(auto val = program.present<unsigned long>(k)){
             (sandbox.*v)(*val);
         }
     }

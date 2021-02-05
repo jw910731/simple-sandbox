@@ -16,20 +16,22 @@ public:
     using Byte = uint8_t;
     static constexpr size_t STACK_SIZE = 1024*8192;
     Sandbox(std::string filePath);
-    void setTime(int second);
-    void setMemory(int byteLimit);
+    void setTime(unsigned long second);
+    void setMemory(unsigned long byteLimit);
+    void setFileSize(unsigned long byteLimit);
     void setStdin(std::string val);
     void setStdout(std::string val);
     void setStderr(std::string val);
     void run(const std::vector<std::string> &args);
 private:
     std::string filePath;
-    std::optional<int> timeLimit, memoryLimit;
+    std::optional<unsigned long> timeLimit, memoryLimit, fileSizeLimit;
     std::optional<std::string> in, out, err;
     void child(const std::vector<std::string> &args);
     void parent(pid_t);
     // child only method
     void setupFd();
+    void setupLimit();
 };
 
 #endif //SIMPLE_SANDBOX_ROOT_SANDBOX_H
