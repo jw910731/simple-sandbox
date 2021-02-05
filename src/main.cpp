@@ -45,13 +45,15 @@ int main(int argc, const char **argv){
         cerr << program;
         exit(1);
     }
-    vector<string> args;
+    vector<string> args = {program.get("executable")};
     // Gather argument for the internal program
     try {
-        args = move(program.get<std::vector<std::string>>("args"));
+        vector<string> tmp = move(program.get<std::vector<std::string>>("args"));
+        args.insert(args.end(), tmp.begin(), tmp.end());
     } catch (std::logic_error& e) {
         // empty catch block for no arg
     }
+
     // Sandbox Setup
     Sandbox sandbox(program.get("executable"));
     // get optional arguments

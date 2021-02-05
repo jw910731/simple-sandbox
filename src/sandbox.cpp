@@ -35,8 +35,7 @@ void Sandbox::setMemory(int byteLimit) {
     *memoryLimit = byteLimit;
 }
 
-void Sandbox::run(std::vector<std::string> args) {
-    args.emplace(args.begin(), filePath);
+void Sandbox::run(const std::vector<std::string> &args) {
     // perform child process spawning
     pid_t pid = fork();
     if(pid < 0) {
@@ -60,6 +59,7 @@ char *const* prepare_helper(const std::vector<std::string> &vec){
     for(size_t i = 0 ; i < vec.size() ; ++i){
         ret[i] = const_cast<char*>(vec[i].c_str());
     }
+    // add NULL terminator
     ret[vec.size()] = NULL;
     return const_cast<char*const*>(ret);
 }
@@ -67,9 +67,8 @@ char *const* prepare_helper(const std::vector<std::string> &vec){
 void Sandbox::child(const std::vector<std::string> &args) {
     // TODO: set resource limit
     // prepare args and env
-    // 0 => program name, 1 ~ size-1 => arg, size => NULL terminator
     char *const* prepared_args = prepare_helper(args);
-    // TODO: prepare proper env
+    // preserve for env passing
     char *const* prepared_envs = prepare_helper({});
     // execute real program
     execve(filePath.c_str(), prepared_args, prepared_envs);
