@@ -21,7 +21,7 @@ public:
     void setStdin(std::string val);
     void setStdout(std::string val);
     void setStderr(std::string val);
-    void run(const std::vector<std::string> &args);
+    void run(std::vector<std::string> args);
 private:
     std::string filePath;
     std::optional<int> timeLimit, memoryLimit;

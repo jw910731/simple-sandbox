@@ -11,6 +11,8 @@ using namespace argparse;
 void setup_argparse(ArgumentParser &program){
     program.add_argument("executable")
         .help("Executable file to wrap in sandbox");
+    program.add_argument("args")
+        .remaining();
     program.add_argument("-t", "--time")
         .help("Constraint Time Limit in millisecond.")
         .action([](const string &val){ return stoi(val); });
@@ -43,6 +45,13 @@ int main(int argc, const char **argv){
         cerr << program;
         exit(1);
     }
+    vector<string> args;
+    // Gather argument for the internal program
+    try {
+        args = move(program.get<std::vector<std::string>>("args"));
+    } catch (std::logic_error& e) {
+        // empty catch block for no arg
+    }
     // Sandbox Setup
     Sandbox sandbox(program.get("executable"));
     // get optional arguments
@@ -66,6 +75,6 @@ int main(int argc, const char **argv){
         }
     }
     // run sandbox
-    sandbox.run({});
+    sandbox.run(args);
     return 0;
 }

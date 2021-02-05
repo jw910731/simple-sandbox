@@ -14,7 +14,6 @@
 #include <sched.h>
 #include <unistd.h>
 
-
 Sandbox::Sandbox(std::string filePath):
     filePath(std::move(filePath)){}
 
@@ -36,7 +35,8 @@ void Sandbox::setMemory(int byteLimit) {
     *memoryLimit = byteLimit;
 }
 
-void Sandbox::run(const std::vector<std::string> &args) {
+void Sandbox::run(std::vector<std::string> args) {
+    args.emplace(args.begin(), filePath);
     // perform child process spawning
     pid_t pid = fork();
     if(pid < 0) {
