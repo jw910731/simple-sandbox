@@ -28,6 +28,8 @@ private:
     std::optional<std::string> in, out, err;
     void child(const std::vector<std::string> &args);
     void parent(pid_t);
+    // child only method
+    void setupFd();
 };
 
 #endif //SIMPLE_SANDBOX_ROOT_SANDBOX_H

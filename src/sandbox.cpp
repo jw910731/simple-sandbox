@@ -11,22 +11,24 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <sched.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 Sandbox::Sandbox(std::string filePath):
     filePath(std::move(filePath)){}
 
 void Sandbox::setStdin(std::string val) {
-    *in = std::move(val);
+    in = std::move(val);
 }
 
 void Sandbox::setStdout(std::string val) {
-    *out = std::move(val);
+    out = std::move(val);
 }
 
 void Sandbox::setStderr(std::string val) {
-    *err = std::move(val);
+    err = std::move(val);
 }
 void Sandbox::setTime(int second) {
     *timeLimit = second;
@@ -64,12 +66,29 @@ char *const* prepare_helper(const std::vector<std::string> &vec){
     return const_cast<char*const*>(ret);
 }
 
+void Sandbox::setupFd() {
+    if(in){
+        close(0);
+        open(in->c_str(), O_RDONLY);
+    }
+    if(out){
+        close(1);
+        open(out->c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+    }
+    if(err){
+        close(2);
+        open(err->c_str(), O_RDWR | O_CREAT | O_TRUNC, 0644);
+    }
+}
+
 void Sandbox::child(const std::vector<std::string> &args) {
     // TODO: set resource limit
     // prepare args and env
     char *const* prepared_args = prepare_helper(args);
     // preserve for env passing
     char *const* prepared_envs = prepare_helper({});
+    // setup fd for redirection
+    setupFd();
     // execute real program
     execve(filePath.c_str(), prepared_args, prepared_envs);
 }
