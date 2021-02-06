@@ -16,9 +16,12 @@ void setup_argparse(ArgumentParser &program){
     program.add_argument("-t", "--time")
         .help("Constraint Time Limit (in millisecond)")
         .action([](const string &val){ return stoul(val); });
+    program.add_argument("--wall-time")
+            .help("Constraint Wall Time Limit (in millisecond), kill when exceeded.")
+            .action([](const string &val){ return stoul(val); });
     program.add_argument("-m", "--memory")
-        .help("Constraint Memory Limit (in Byte)")
-        .action([](const string &val){ return stoul(val); });
+        .help("Constraint Memory Limit (in KByte=1024Byte)")
+        .action([](const string &val){ return stoul(val)/1024; });
     program.add_argument("-f", "--fsize")
         .help("Constraint Created / Write File Size (in Byte)")
         .action([](const string &val){ return stoul(val); });
@@ -60,27 +63,30 @@ int main(int argc, const char **argv){
     // Sandbox Setup
     Sandbox sandbox(program.get("executable"));
     // get optional arguments
-    map<const string, void(Sandbox::*)(string)> stringOpt = {
-            {"--in", &Sandbox::setStdin},
-            {"--out", &Sandbox::setStdout},
-            {"--err", &Sandbox::setStderr}
+    const static map<const string, optional<string> Sandbox::*> stringOpt = {
+            {"--in", &Sandbox::in},
+            {"--out", &Sandbox::out},
+            {"--err", &Sandbox::err},
     };
-    map<string, void (Sandbox::*)(unsigned long)> intOpt = {
-            {"--time", &Sandbox::setTime},
-            {"--memory", &Sandbox::setMemory},
-            {"--fsize", &Sandbox::setFileSize}
+    const static map<string, optional<unsigned long> Sandbox::*> intOpt = {
+            {"--time", &Sandbox::timeLimit},
+            {"--wall-time", &Sandbox::walltimeLimit},
+            {"--memory", &Sandbox::memoryLimit},
+            {"--fsize", &Sandbox::fileSizeLimit},
     };
+    // pass optional flag to sandbox
     for(auto [k, v] : stringOpt){
         if(auto val = program.present(k)){
-            (sandbox.*v)(*val);
+            (sandbox.*v) = *val;
         }
     }
     for(auto [k, v] : intOpt){
         if(auto val = program.present<unsigned long>(k)){
-            (sandbox.*v)(*val);
+            (sandbox.*v) = *val;
         }
     }
-    // run sandbox
+    // run sandbox and stuck until child exited
     sandbox.run(args);
+    cout << sandbox.getReport()->fExitStat;
     return 0;
 }
