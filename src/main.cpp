@@ -8,32 +8,32 @@
 using namespace std;
 using namespace argparse;
 
-void setup_argparse(ArgumentParser &program){
+void setup_argparse(ArgumentParser &program) {
     program.add_argument("executable")
-        .help("Executable file to wrap in sandbox");
+            .help("Executable file to wrap in sandbox");
     program.add_argument("args")
-        .remaining();
+            .remaining();
     program.add_argument("-t", "--time")
-        .help("Constraint Time Limit (in millisecond)")
-        .action([](const string &val){ return stoul(val); });
+            .help("Constraint Time Limit (in millisecond)")
+            .action([](const string &val) { return stoul(val); });
     program.add_argument("--wall-time")
             .help("Constraint Wall Time Limit (in millisecond), kill when exceeded.")
-            .action([](const string &val){ return stoul(val); });
+            .action([](const string &val) { return stoul(val); });
     program.add_argument("-m", "--memory")
-        .help("Constraint Memory Limit (in KByte=1024Byte)")
-        .action([](const string &val){ return stoul(val)/1024; });
+            .help("Constraint Memory Limit (in KByte=1024Byte)")
+            .action([](const string &val) { return stoul(val) / 1024; });
     program.add_argument("-f", "--fsize")
-        .help("Constraint Created / Write File Size (in Byte)")
-        .action([](const string &val){ return stoul(val); });
+            .help("Constraint Created / Write File Size (in Byte)")
+            .action([](const string &val) { return stoul(val); });
     program.add_argument("--in")
-        .help("Redirect stdin Stream from Designated File");
+            .help("Redirect stdin Stream from Designated File");
     program.add_argument("--out")
-        .help("Redirect stdout Stream to Designated File");
+            .help("Redirect stdout Stream to Designated File");
     program.add_argument("--err")
-        .help("Redirect stderr Stream to Designated File");
+            .help("Redirect stderr Stream to Designated File");
 }
 
-int main(int argc, const char **argv){
+int main(int argc, const char **argv) {
     ArgumentParser program("simple-sandbox");
     setup_argparse(program);
 
@@ -41,12 +41,12 @@ int main(int argc, const char **argv){
     try {
         program.parse_args(argc, argv);
     }
-    catch (const std::runtime_error& e) {
+    catch (const std::runtime_error &e) {
         cerr << e.what() << endl;
         cerr << program;
         exit(1);
     }
-    catch(const std::logic_error &e){
+    catch (const std::logic_error &e) {
         cerr << "Argument Parsing Error" << endl;
         cerr << program;
         exit(1);
@@ -56,7 +56,7 @@ int main(int argc, const char **argv){
     try {
         vector<string> tmp = move(program.get<std::vector<std::string>>("args"));
         args.insert(args.end(), tmp.begin(), tmp.end());
-    } catch (std::logic_error& e) {
+    } catch (std::logic_error &e) {
         // empty catch block for no arg
     }
 
@@ -64,24 +64,24 @@ int main(int argc, const char **argv){
     Sandbox sandbox(program.get("executable"));
     // get optional arguments
     const static map<const string, optional<string> Sandbox::*> stringOpt = {
-            {"--in", &Sandbox::in},
+            {"--in",  &Sandbox::in},
             {"--out", &Sandbox::out},
             {"--err", &Sandbox::err},
     };
     const static map<string, optional<unsigned long> Sandbox::*> intOpt = {
-            {"--time", &Sandbox::timeLimit},
+            {"--time",      &Sandbox::timeLimit},
             {"--wall-time", &Sandbox::walltimeLimit},
-            {"--memory", &Sandbox::memoryLimit},
-            {"--fsize", &Sandbox::fileSizeLimit},
+            {"--memory",    &Sandbox::memoryLimit},
+            {"--fsize",     &Sandbox::fileSizeLimit},
     };
     // pass optional flag to sandbox
-    for(auto [k, v] : stringOpt){
-        if(auto val = program.present(k)){
+    for (auto[k, v] : stringOpt) {
+        if (auto val = program.present(k)) {
             (sandbox.*v) = *val;
         }
     }
-    for(auto [k, v] : intOpt){
-        if(auto val = program.present<unsigned long>(k)){
+    for (auto[k, v] : intOpt) {
+        if (auto val = program.present<unsigned long>(k)) {
             (sandbox.*v) = *val;
         }
     }

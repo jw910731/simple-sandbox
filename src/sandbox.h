@@ -14,23 +14,28 @@
 
 #include <sys/resource.h>
 
-class Sandbox{
+class Sandbox {
 public:
     std::optional<unsigned long> timeLimit, memoryLimit, fileSizeLimit, walltimeLimit;
     std::optional<std::string> in, out, err;
-    class Report{
+
+    class Report {
     public:
         std::string fExitStat;
         int exitCode;
         struct rusage rus;
     };
+
     Sandbox(std::string filePath);
+
     void run(const std::vector<std::string> &args);
+
     [[nodiscard]] std::optional<Report> getReport() const;
+
 private:
     // in microsecond
     // now it's 1/100 second
-    const static unsigned WALLTIME_INTERVAL = 10*1000;
+    const static unsigned WALLTIME_INTERVAL = 10 * 1000;
     // child program executable file path
     std::string filePath;
     // final report object (only available after child process exited)
@@ -40,18 +45,24 @@ private:
     // start time
     std::chrono::high_resolution_clock::time_point startTime, endTime;
     // time limit duration
-    std::chrono::milliseconds timeLimitDur, walltimeDur;
+    std::chrono::milliseconds timeLimitDur{}, walltimeDur{};
     // child pid
-    pid_t childpid;
+    pid_t childpid{};
+
     void child(const std::vector<std::string> &args);
+
     void parent();
+
     // child only method
     void setupFd();
+
     void setupLimit();
+
     // parent only method
     void childKiller() const; // force stop child
     void waitChild(); // wait for child and handle wall timer and call resource reporter when child process normally end
     void genReport(struct rusage *rus, int wstatus);
+
     void timeChecker();
 };
 
