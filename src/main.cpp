@@ -20,11 +20,11 @@ void setup_argparse(ArgumentParser &program) {
             .help("Constraint Wall Time Limit (in millisecond), kill when exceeded.")
             .action([](const string &val) { return stoul(val); });
     program.add_argument("-m", "--memory")
-            .help("Constraint Memory Limit (in KByte=1024Byte)")
+            .help("Constraint Memory Limit (in KByte = 1024Byte)")
             .action([](const string &val) { return stoul(val) / 1024; });
     program.add_argument("-f", "--fsize")
-            .help("Constraint Created / Write File Size (in Byte)")
-            .action([](const string &val) { return stoul(val); });
+            .help("Constraint Created / Write File Size (in KByte = 1024Byte)")
+            .action([](const string &val) { return stoul(val) / 1024; });
     program.add_argument("--in")
             .help("Redirect stdin Stream from Designated File");
     program.add_argument("--out")
