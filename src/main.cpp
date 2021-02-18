@@ -2,91 +2,100 @@
 // Created by jw910731 on 2/4/21.
 //
 #include <iostream>
-#include <argparse/argparse.hpp>
+#include <vector>
+#include <map>
 #include "sandbox.h"
-
+#include "debug.h"
 using namespace std;
-using namespace argparse;
 
-void setup_argparse(ArgumentParser &program) {
-    program.add_argument("executable")
-            .help("Executable file to wrap in sandbox");
-    program.add_argument("args")
-            .remaining();
-    program.add_argument("-t", "--time")
-            .help("Constraint Time Limit (in millisecond)")
-            .action([](const string &val) { return stoul(val); });
-    program.add_argument("--wall-time")
-            .help("Constraint Wall Time Limit (in millisecond), kill when exceeded.")
-            .action([](const string &val) { return stoul(val); });
-    program.add_argument("-m", "--memory")
-            .help("Constraint Memory Limit (in KByte=1024Byte)")
-            .action([](const string &val) { return stoul(val) / 1024; });
-    program.add_argument("-f", "--fsize")
-            .help("Constraint Created / Write File Size (in Byte)")
-            .action([](const string &val) { return stoul(val); });
-    program.add_argument("--in")
-            .help("Redirect stdin Stream from Designated File");
-    program.add_argument("--out")
-            .help("Redirect stdout Stream to Designated File");
-    program.add_argument("--err")
-            .help("Redirect stderr Stream to Designated File");
+const static char *helpMsg = "Command Usage :\n\
+        %s [options] <executable> [args for executable]\n\
+Option List:\n\
+        -t, --time : Constraint Time Limit (in millisecond)\n\
+        --wall-time : Constraint Wall Time Limit (in millisecond), kill when exceeded\n\
+        -m, --memory : Constraint Memory Limit (in KByte = 1024Byte)\n\
+        -f, --fsize : Constraint Created / Write File Size (in Byte)\n\
+        --in, --out, --err : Redirect corresponding I/O stream from or to designated file\n\
+        -h, --help : print this help message\n";
+
+inline size_t isOptArg(const string &_s){
+    const char *s = _s.c_str(), *tmp = s;
+    // not terminated
+    while(*tmp != '\0' && (tmp - s) < 2){
+        if(*tmp != '-'){
+            break;
+        }
+        ++tmp;
+    }
+    return tmp - s;
 }
 
-int main(int argc, const char **argv) {
-    ArgumentParser program("simple-sandbox");
-    setup_argparse(program);
-
-    // parse argument
-    try {
-        program.parse_args(argc, argv);
-    }
-    catch (const std::runtime_error &e) {
-        cerr << e.what() << endl;
-        cerr << program;
-        exit(1);
-    }
-    catch (const std::logic_error &e) {
-        cerr << "Argument Parsing Error" << endl;
-        cerr << program;
-        exit(1);
-    }
-    vector<string> args = {program.get("executable")};
-    // Gather argument for the internal program
-    try {
-        vector<string> tmp = move(program.get<std::vector<std::string>>("args"));
-        args.insert(args.end(), tmp.begin(), tmp.end());
-    } catch (std::logic_error &e) {
-        // empty catch block for no arg
-    }
-
-    // Sandbox Setup
-    Sandbox sandbox(program.get("executable"));
-    // get optional arguments
+vector<string> arg_parser(const vector<string> &args, Sandbox &sandbox){
+    // args lookup table
     const static map<const string, optional<string> Sandbox::*> stringOpt = {
             {"--in",  &Sandbox::in},
             {"--out", &Sandbox::out},
             {"--err", &Sandbox::err},
     };
-    const static map<string, optional<unsigned long> Sandbox::*> intOpt = {
-            {"--time",      &Sandbox::timeLimit},
-            {"--wall-time", &Sandbox::walltimeLimit},
-            {"--memory",    &Sandbox::memoryLimit},
-            {"--fsize",     &Sandbox::fileSizeLimit},
+    // map {string : pair<Sandbox field, divide ratio>}
+    const static map<string, pair<optional<unsigned long> Sandbox::*, unsigned long>> intOpt = {
+            {"--time", {&Sandbox::timeLimit, 1}},
+            {"-t",      {&Sandbox::timeLimit, 1}},
+            {"--wall-time", {&Sandbox::walltimeLimit, 1}},
+            {"--memory", {&Sandbox::memoryLimit, 1024}},
+            {"-m", {&Sandbox::memoryLimit, 1024}},
+            {"--fsize", {&Sandbox::fileSizeLimit, 1}},
+            {"-f", {&Sandbox::fileSizeLimit, 1}},
     };
-    // pass optional flag to sandbox
-    for (auto[k, v] : stringOpt) {
-        if (auto val = program.present(k)) {
-            (sandbox.*v) = *val;
+
+    // iterator for args
+    auto it = args.cbegin();
+    ++it; // to skip sandbox executable path
+    // sandbox argument
+    while(it != args.cend()){
+        size_t opt = isOptArg(*it);
+        if(opt == 0) break;
+        // if sandbox argument not starts from "-" / "--"
+        if(opt > 2) throw logic_error("Argument parse error");
+        auto strMapIt = stringOpt.find(*it);
+        auto intMapIt = intOpt.find(*it);
+        // parse sandbox args
+        if(strMapIt != stringOpt.end()){
+            (sandbox.*(strMapIt->second)) = *(++it);
         }
-    }
-    for (auto[k, v] : intOpt) {
-        if (auto val = program.present<unsigned long>(k)) {
-            (sandbox.*v) = *val;
+        else if(intMapIt != intOpt.end()){
+            auto &tmp = intMapIt->second; // mapped pair
+            sandbox.*(tmp.first) = stoul(*(++it)) / tmp.second;
         }
+        else{
+            if(*it == "-h" || *it == "--help"){
+                printf(helpMsg, args[0].c_str());
+                exit(0);
+            }
+            throw logic_error("Argument parse error");
+        }
+        ++it;
     }
+    // process executable
+    if(it == args.cend()) throw logic_error("Argument not enough");
+    sandbox.setExecPath(*it); // keep the program name as the first argument
+    // prepare executable args
+    vector<string> exeArgs;
+    while(it != args.cend()){
+        exeArgs.emplace_back(*(it++));
+    }
+    return exeArgs;
+}
+
+int main(int argc, const char **argv) {
+    vector<string> args;
+    for(int i = 0 ; i < argc ; ++i){
+        args.emplace_back(string(argv[i]));
+    }
+    Sandbox sandbox;
+    auto parsed = arg_parser(args, sandbox);
     // run sandbox and stuck until child exited
-    sandbox.run(args);
+    sandbox.run(parsed);
     cout << sandbox.getReport()->fExitStat;
     return 0;
 }

@@ -53,8 +53,9 @@ std::ostream &operator<<(std::ostream &os, std::chrono::nanoseconds ns) {
     return os;
 };
 
-Sandbox::Sandbox(std::string filePath) :
-        filePath(std::move(filePath)) {}
+void Sandbox::setExecPath(const std::string &execPath){
+    filePath = execPath;
+}
 
 void Sandbox::run(const std::vector<std::string> &args) {
     // setup time duration of internal field
@@ -142,7 +143,11 @@ void Sandbox::child(const std::vector<std::string> &args) {
     // setup rlimit
     setupLimit();
     // execute real program
-    execve(filePath.c_str(), prepared_args, prepared_envs);
+    int ret = execve(filePath.c_str(), prepared_args, prepared_envs);
+    if(ret < 0){
+        perror("execve()");
+        exit(-1);
+    }
 }
 
 static volatile sig_atomic_t alarmFlag = 0, quitFlag = 0;
