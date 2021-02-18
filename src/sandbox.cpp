@@ -53,8 +53,9 @@ std::ostream &operator<<(std::ostream &os, std::chrono::nanoseconds ns) {
     return os;
 };
 
-Sandbox::Sandbox(std::string filePath) :
-        filePath(std::move(filePath)) {}
+void Sandbox::setExecPath(const std::string &execPath){
+    filePath = execPath;
+}
 
 void Sandbox::run(const std::vector<std::string> &args) {
     // setup time duration of internal field

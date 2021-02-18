@@ -25,8 +25,10 @@ public:
         int exitCode;
         struct rusage rus;
     };
+    Sandbox(){}
+    Sandbox(std::string execPath):filePath(std::move(execPath)) {}
 
-    Sandbox(std::string filePath);
+    void setExecPath(const std::string &execPath);
 
     void run(const std::vector<std::string> &args);
 
