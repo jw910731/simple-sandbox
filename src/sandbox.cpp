@@ -314,7 +314,7 @@ void Sandbox::genReport(struct rusage *rus, int wstatus) {
         errFlag = true;
         ss << "[TLE] ";
     }
-    if (unsigned long memLim = memoryLimit && rus->ru_maxrss > (long int) (memLim / 1000)) {
+    if ( memoryLimit && rus->ru_maxrss > (long)*memoryLimit) {
         errFlag = true;
         ss << "[MLE] ";
     }

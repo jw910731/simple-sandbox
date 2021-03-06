@@ -13,7 +13,7 @@ const static char *helpMsg = "Command Usage :\n\
 Option List:\n\
         -t, --time : Constraint Time Limit (in millisecond)\n\
         --wall-time : Constraint Wall Time Limit (in millisecond), kill when exceeded\n\
-        -m, --memory : Constraint Memory Limit (in KByte = 1024Byte)\n\
+        -m, --memory : Constraint Memory Limit (in Byte)\n\
         -f, --fsize : Constraint Created / Write File Size (in Byte)\n\
         --in, --out, --err : Redirect corresponding I/O stream from or to designated file\n\
         -h, --help : print this help message\n";
@@ -42,8 +42,8 @@ vector<string> arg_parser(const vector<string> &args, Sandbox &sandbox){
             {"--time", {&Sandbox::timeLimit, 1}},
             {"-t",      {&Sandbox::timeLimit, 1}},
             {"--wall-time", {&Sandbox::walltimeLimit, 1}},
-            {"--memory", {&Sandbox::memoryLimit, 1024}},
-            {"-m", {&Sandbox::memoryLimit, 1024}},
+            {"--memory", {&Sandbox::memoryLimit, 1}},
+            {"-m", {&Sandbox::memoryLimit, 1}},
             {"--fsize", {&Sandbox::fileSizeLimit, 1}},
             {"-f", {&Sandbox::fileSizeLimit, 1}},
     };
