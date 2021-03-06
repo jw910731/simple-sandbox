@@ -10,7 +10,17 @@ make
 ```
 and executable will be located in `build/src/simple-sandbox`
 # tl;dr
-use `simple-sandbox -h` to get further help. I'm too lazy to write this section.
+```
+Command Usage :
+        simple-sandbox [options] <executable> [args for executable]
+Option List:
+        -t, --time : Constraint Time Limit (in millisecond)
+        --wall-time : Constraint Wall Time Limit (in millisecond), kill when exceeded
+        -m, --memory : Constraint Memory Limit (in KByte = 1024Byte)
+        -f, --fsize : Constraint Created / Write File Size (in Byte)
+        --in, --out, --err : Redirect corresponding I/O stream from or to designated file
+        -h, --help : print this help message
+```
 # Todo
 - implement file system access control
 - be able to forward and set environment variable
