@@ -93,9 +93,15 @@ int main(int argc, const char **argv) {
         args.emplace_back(string(argv[i]));
     }
     Sandbox sandbox;
-    auto parsed = arg_parser(args, sandbox);
-    // run sandbox and stuck until child exited
-    sandbox.run(parsed);
-    cout << sandbox.getReport()->fExitStat;
+    try {
+        auto parsed = arg_parser(args, sandbox);
+        // run sandbox and stuck until child exited
+        sandbox.run(parsed);
+        cout << sandbox.getReport()->fExitStat;
+    }
+    catch (std::logic_error &e) {
+        cout << "Argument Parse Error" << endl;
+        printf(helpMsg, argv[0]);
+    }
     return 0;
 }
