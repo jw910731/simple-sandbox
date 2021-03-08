@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <iomanip>
 #include "sandbox.h"
 #include "debug.h"
 using namespace std;
@@ -11,7 +12,7 @@ using namespace std;
 const static char *helpMsg = "Command Usage :\n\
         %s [options] <executable> [args for executable]\n\
 Option List:\n\
-        -t, --time : Constraint Time Limit (in millisecond)\n\
+        -t, --time : Constraint Time Limit (in second)\n\
         --wall-time : Constraint Wall Time Limit (in millisecond), kill when exceeded\n\
         -m, --memory : Constraint Memory Limit (in Byte)\n\
         -f, --fsize : Constraint Created / Write File Size (in Byte)\n\
@@ -87,6 +88,8 @@ vector<string> arg_parser(const vector<string> &args, Sandbox &sandbox){
     return exeArgs;
 }
 
+std::ostream &operator<<(std::ostream &os, std::chrono::nanoseconds ns);
+
 int main(int argc, const char **argv) {
     vector<string> args;
     for(int i = 0 ; i < argc ; ++i){
@@ -97,7 +100,10 @@ int main(int argc, const char **argv) {
         auto parsed = arg_parser(args, sandbox);
         // run sandbox and stuck until child exited
         sandbox.run(parsed);
-        cout << sandbox.getReport()->fExitStat;
+        auto report = sandbox.getReport();
+        cout << report->fExitStat << '\n';
+        cout << "CPU Time: " << report->cpuTime << '\n';
+        cout << "Memory Usage: " << report->memory << "KB\n";
     }
     catch (std::logic_error &e) {
         cout << "Argument Parse Error" << endl;

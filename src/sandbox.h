@@ -24,6 +24,8 @@ public:
         std::string fExitStat;
         int exitCode;
         struct rusage rus;
+        std::chrono::microseconds cpuTime;
+        long memory; // in KB
     };
     Sandbox(){}
     Sandbox(std::string execPath):filePath(std::move(execPath)) {}

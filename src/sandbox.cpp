@@ -119,7 +119,7 @@ static void setRlimitHelper(int res, rlim_t limit) {
 void Sandbox::setupLimit() {
 #define RLIM(res, val) setRlimitHelper(RLIMIT_##res, val)
     if (timeLimit) {
-        RLIM(CPU, *timeLimit / 1000);
+        RLIM(CPU, *timeLimit);
     }
     if (memoryLimit) {
         RLIM(AS, *memoryLimit);
@@ -145,7 +145,7 @@ void Sandbox::child(const std::vector<std::string> &args) {
     // execute real program
     int ret = execve(filePath.c_str(), prepared_args, prepared_envs);
     if(ret < 0){
-        perror("execve()");
+        perror("execve():");
         exit(-1);
     }
 }
@@ -239,7 +239,7 @@ void Sandbox::timeChecker() {
         struct rusage rus;
         int stat = getrusage(RUSAGE_CHILDREN, &rus);
         if (stat < 0) {
-            perror("getrusage()");
+            perror("getrusage():");
         } else if (rlimCpuTimeHelper(rus) > timeLimitDur) {
             endTime = now;
             childKiller();
@@ -304,17 +304,16 @@ void Sandbox::genReport(struct rusage *rus, int wstatus) {
         }
     }
     auto cpuTime = rlimCpuTimeHelper(*rus);
-    DEBUG(std::cerr << rus->ru_utime.tv_sec << ":" << rus->ru_utime.tv_usec << " " << rus->ru_stime.tv_sec << ":"
-                    << rus->ru_stime.tv_usec << std::endl);
-    DEBUG(std::cerr << cpuTime << std::endl);
+    report.cpuTime = cpuTime;
     if (walltimeLimit && (endTime - startTime) > walltimeDur) {
         errFlag = true;
         ss << "[TLE (Wall)] ";
-    } else if (timeLimit && (endTime - startTime) > timeLimitDur) {
+    } else if (timeLimit && cpuTime > timeLimitDur) {
         errFlag = true;
         ss << "[TLE] ";
     }
-    if ( memoryLimit && rus->ru_maxrss > (long)*memoryLimit) {
+    report.memory = rus->ru_maxrss;
+    if ( memoryLimit && long(rus->ru_maxrss * 1024) > (long)*memoryLimit) {
         errFlag = true;
         ss << "[MLE] ";
     }
